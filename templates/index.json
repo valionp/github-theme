@@ -16,74 +16,6 @@
         "show_rating": false
       }
     },
-    "1636383480a171f0da": {
-      "type": "featured-product",
-      "blocks": {
-        "1636383480a171f0da-0": {
-          "type": "text",
-          "settings": {
-            "text": "",
-            "text_style": "uppercase"
-          }
-        },
-        "1636383480a171f0da-1": {
-          "type": "title",
-          "settings": {
-          }
-        },
-        "1636383480a171f0da-2": {
-          "type": "text",
-          "settings": {
-            "text": "",
-            "text_style": "subtitle"
-          }
-        },
-        "1636383480a171f0da-3": {
-          "type": "price",
-          "settings": {
-          }
-        },
-        "1636383480a171f0da-4": {
-          "type": "variant_picker",
-          "settings": {
-            "picker_type": "button"
-          }
-        },
-        "1636383480a171f0da-5": {
-          "type": "quantity_selector",
-          "settings": {
-          }
-        },
-        "1636383480a171f0da-6": {
-          "type": "buy_buttons",
-          "settings": {
-            "show_dynamic_checkout": true
-          }
-        },
-        "1636383480a171f0da-7": {
-          "type": "share",
-          "settings": {
-            "share_label": "Share"
-          }
-        }
-      },
-      "block_order": [
-        "1636383480a171f0da-0",
-        "1636383480a171f0da-1",
-        "1636383480a171f0da-2",
-        "1636383480a171f0da-3",
-        "1636383480a171f0da-4",
-        "1636383480a171f0da-5",
-        "1636383480a171f0da-6",
-        "1636383480a171f0da-7"
-      ],
-      "settings": {
-        "product": "classic-varsity-top",
-        "secondary_background": false,
-        "hide_variants": false,
-        "enable_video_looping": false
-      }
-    },
     "163682934538272f17": {
       "type": "newsletter",
       "blocks": {
@@ -175,7 +107,6 @@
   },
   "order": [
     "featured_products",
-    "1636383480a171f0da",
     "163682934538272f17",
     "1636829352ac65990c",
     "16368293567fa2b151"
