@@ -72,11 +72,28 @@
         "soft_background": false,
         "show_view_all": true
       }
+    },
+    "163683538527628257": {
+      "type": "featured-collection",
+      "settings": {
+        "title": "Featured collection",
+        "collection": "",
+        "products_to_show": 4,
+        "show_view_all": true,
+        "swipe_on_mobile": false,
+        "image_ratio": "adapt",
+        "show_secondary_image": false,
+        "add_image_padding": false,
+        "show_image_outline": true,
+        "show_vendor": false,
+        "show_rating": false
+      }
     }
   },
   "order": [
     "featured_products",
     "1636829352ac65990c",
-    "16368293567fa2b151"
+    "16368293567fa2b151",
+    "163683538527628257"
   ]
 }
