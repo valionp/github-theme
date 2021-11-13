@@ -1,0 +1,51 @@
+{% assign pbc_cart_total_price = 0 %}
+{% comment %}{% assign pbc_cart_count = 0 %}{% endcomment %}
+
+{% if cart %}
+    {% assign pbc_cart = cart %}
+    {% assign pbc_item_list = cart.items %}
+{% elsif checkout %}
+    {% assign pbc_cart = checkout %}
+    {% assign pbc_item_list = checkout.line_items %}
+{% endif %}
+
+{% for pbc_cart_item in pbc_item_list %}
+    {% include 'pbc-item' with pbc_cart_item as line_item %}
+
+    {% assign pbc_cart_total_price = pbc_cart_total_price | plus: pbc_item_price %}
+    {% assign pbc_cart_count  = pbc_cart_count | plus: item.quantity %}
+{% endfor %}
+
+<script type="text/javascript">
+  const checkoutSelectors = [
+    "input[name='checkout']:not(.bold_clone):not(.pbc_ignore)",
+    "button[name='checkout']:not(.pbc_ignore)",
+    "[href$='checkout']:not(.pbc_ignore)",
+    "input[name='goto_pp']",
+    "button[name='goto_pp']",
+    "input[name='goto_gc']",
+    "button[name='goto_gc']",
+    ".google-wallet-button-holder",
+    ".amazon-payments-pay-button"
+  ];
+
+  for (let selector of checkoutSelectors) {
+    let elements = document.querySelectorAll(selector);
+    for (let element of elements) {
+      element.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        fetch("cart.js?t=" + Date.now()).then(cartData => cartData.json()).then(cartData => {
+          fetch("/apps/pbc-wholesale/check-discount", {
+            method: "POST",
+            body: JSON.stringify({
+              cartData,
+              customer: {id: {{customer.id}}, email: "{{customer.email | escape}}" }
+            })
+          })
+        })
+      })
+    }
+  }
+</script>

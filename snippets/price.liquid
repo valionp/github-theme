@@ -1,0 +1,160 @@
+{% comment %}pbc code wholesale{% endcomment %}
+{% assign pbc_prod_pbc = product %}
+{% assign pbc_var_pbc = variant | default: pbc_prod_pbc.selected_or_first_available_variant %}
+
+{%- assign pbc_price = pbc_prod_pbc.price -%}
+{%- assign pbc_price_min = pbc_prod_pbc.price_min -%}
+{%- assign pbc_price_max = pbc_prod_pbc.price_max -%}
+{%- assign pbc_compare_at_price_pbc = pbc_prod_pbc.compare_at_price -%}
+{%- assign pbc_compare_at_price_min = pbc_prod_pbc.compare_at_price_min -%}
+{%- assign pbc_compare_at_price_max = pbc_prod_pbc.compare_at_price_max -%}
+{%- assign pbc_var_pbc_price = pbc_var_pbc.price -%}
+{%- assign pbc_var_pbc_compare_at_price = pbc_var_pbc.compare_at_price -%}
+
+{% assign customerTag = false %}
+
+{% if shop.metafields.pbc_wholesale['app_enabled'] and customer.tags != blank %}
+    {% for metafield in pbc_prod_pbc.metafields.pbc_wholesale %}
+        {% assign metafieldName = metafield | first %}
+        {% if metafieldName contains 'discount_' %}
+            {% assign discountData = metafield | last | split: '|' %}
+            {% assign customerTag = metafieldName | replace: 'discount_', '' %}
+            {% if customer.tags contains customerTag %}
+              {% break %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if discountData and customerTag and customer.tags contains customerTag %}
+        {% if pbc_var_pbc.compare_at_price == blank or pbc_var_pbc.compare_at_price == 0 or pbc_var_pbc.compare_at_price < pbc_var_pbc.price %}
+            {% assign pbc_var_pbc_compare_at_price = pbc_var_pbc.price %}
+        {% else %}
+            {% assign pbc_var_pbc_compare_at_price = pbc_var_pbc.compare_at_price %}
+        {% endif %}
+
+        {% assign priceKey = customerTag | prepend: "price_" %}
+        {% if pbc_var_pbc.metafields.pbc_wholesale[priceKey] != blank and pbc_var_pbc.metafields.pbc_wholesale[priceKey] > 0 %}
+            {% assign pbc_var_pbc_price = pbc_var_pbc.metafields.pbc_wholesale[priceKey] %}
+        {% else %}
+            {% assign discountType = discountData[0] %}
+            {% assign discountValue = discountData[1] %}
+            {% assign pbc_compare_at_price_pbc = pbc_var_pbc_compare_at_price %}
+            {% if pbc_prod_pbc.compare_at_price_min != 0 %}{% assign pbc_compare_at_price_min = pbc_prod_pbc.compare_at_price_min %}{% else %}{% assign pbc_compare_at_price_min = pbc_prod_pbc.price_min %}{% endif %}
+            {% if pbc_prod_pbc.compare_at_price_max != 0 %}{% assign pbc_compare_at_price_max = pbc_prod_pbc.compare_at_price_max %}{% else %}{% assign pbc_compare_at_price_max = pbc_prod_pbc.price_max %}{% endif %}
+
+            {% if discountType == 'percent' %}
+                {% assign discountValue = discountValue | times: 0.01 %}
+                {% assign discountValue = 1 | minus: discountValue %}
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | times: discountValue %}
+                {% assign pbc_price = pbc_var_pbc_price %}
+                {% assign pbc_price_min = pbc_prod_pbc.price_min | times: discountValue %}
+                {% assign pbc_price_max = pbc_prod_pbc.price_max | times: discountValue %}
+            {% else %}
+                {% assign discountValue = discountValue | times: 100 %}
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | minus: discountValue %}
+                {% if pbc_var_pbc_price < 0 %}{% assign pbc_var_pbc_price = 0 %}{% endif %}
+                {% assign pbc_price = pbc_var_pbc_price %}
+                {% assign pbc_price_min = pbc_prod_pbc.price_min | times: discountValue %}
+                {% if pbc_price_min < 0 %}{% assign pbc_price_min = 0 %}{% endif %}
+                {% assign pbc_price_max = pbc_prod_pbc.price_max | times: discountValue %}
+                {% if pbc_price_max < 0 %}{% assign pbc_price_max = 0 %}{% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+{% comment %}pbc code wholesale{% endcomment %}
+
+
+{% comment %}
+    Renders a list of product's price (regular, sale)
+
+    Accepts:
+    - product: {Object} Product Liquid object (optional)
+    - use_variant: {Boolean} Renders selected or first variant price instead of overall product pricing (optional)
+    - show_badges: {Boolean} Renders 'Sale' and 'Sold Out' tags if the product matches the condition (optional)
+    - price_class: {String} Adds a price class to the price element (optional)
+
+    Usage:
+    {% render 'price', product: product %}
+{% endcomment %}
+{%- liquid
+  if use_variant
+    assign target = pbc_prod_pbc.selected_or_first_available_variant
+  else
+    assign target = pbc_prod_pbc
+  endif
+
+  assign compare_at_price = pbc_compare_at_price_pbc
+  assign price = pbc_price | default: 1999
+  assign available = target.available | default: false
+  assign money_price = price | money
+  if settings.currency_code_enabled
+    assign money_price = price | money_with_currency
+  endif
+
+  if target == pbc_prod_pbc and product.price_varies
+    assign money_price = 'products.product.price.from_price_html' | t: price: money_price
+  endif
+-%}
+
+<div class="price
+  {%- if price_class %} {{ price_class }}{% endif -%}
+  {%- if available == false %} price--sold-out {% endif -%}
+  {%- if compare_at_price > price %} price--on-sale {% endif -%}
+  {%- if product.price_varies == false and product.compare_at_price_varies %} price--no-compare{% endif -%}
+  {%- if show_badges %} price--show-badge{% endif -%}">
+  <div>
+    {%- comment -%}
+      Explanation of description list:
+        - div.price__regular: Displayed when there are no variants on sale
+        - div.price__sale: Displayed when a variant is a sale
+    {%- endcomment -%}
+    <div class="price__regular">
+      <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.regular_price' | t }}</span>
+      <span class="price-item price-item--regular">
+        {{ money_price }}
+      </span>
+    </div>
+    <div class="price__sale">
+      {%- unless product.price_varies == false and product.compare_at_price_varies %}
+        <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.regular_price' | t }}</span>
+        <span>
+          <s class="price-item price-item--regular">
+            {% if settings.currency_code_enabled %}
+              {{ compare_at_price | money_with_currency }}
+            {% else %}
+              {{ compare_at_price | money }}
+            {% endif %}
+          </s>
+        </span>
+      {%- endunless -%}
+      <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.sale_price' | t }}</span>
+      <span class="price-item price-item--sale price-item--last">
+        {{ money_price }}
+      </span>
+    </div>
+    <small class="unit-price caption{% if product.selected_or_first_available_variant.unit_price_measurement == nil %} hidden{% endif %}">
+      <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
+      <span class="price-item price-item--last">
+        <span>{{- product.selected_or_first_available_variant.unit_price | money -}}</span>
+        <span aria-hidden="true">/</span>
+        <span class="visually-hidden">&nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;</span>
+        <span>
+          {%- if product.selected_or_first_available_variant.unit_price_measurement.reference_value != 1 -%}
+            {{- product.selected_or_first_available_variant.unit_price_measurement.reference_value -}}
+          {%- endif -%}
+          {{ product.selected_or_first_available_variant.unit_price_measurement.reference_unit }}
+        </span>
+      </span>
+    </small>
+  </div>
+  {%- if show_badges -%}
+    <span class="badge price__badge-sale color-{{ settings.sale_badge_color_scheme }}" aria-hidden="true">
+      {{ 'products.product.on_sale' | t }}
+    </span>
+
+    <span class="badge price__badge-sold-out color-{{ settings.sold_out_badge_color_scheme }}" aria-hidden="true">
+      {{ 'products.product.sold_out' | t }}
+    </span>
+  {%- endif -%}
+</div>

@@ -1,0 +1,167 @@
+{% comment %}pbc code wholesale{% endcomment %}
+{% assign pbc_cart_total_price = 0 %}
+{% comment %}{% assign pbc_cart_count = 0 %}{% endcomment %}
+
+{% if cart %}
+    {% assign pbc_cart = cart %}
+    {% assign pbc_item_list = cart.items %}
+{% elsif checkout %}
+    {% assign pbc_cart = checkout %}
+    {% assign pbc_item_list = checkout.line_items %}
+{% endif %}
+
+{% for pbc_cart_item in pbc_item_list %}
+    
+{% assign pbc_item_pbc = pbc_cart_item | default: item | default: line_item %}
+{% assign pbc_prod_pbc = pbc_item_pbc.product | default: pbc_item_pbc %}
+{% assign pbc_var_pbc = pbc_prod_pbc.selected_or_first_available_variant %}
+
+{%- assign pbc_item_original_price = pbc_item_pbc.original_price -%}
+{%- assign pbc_item_final_price = pbc_item_pbc.final_price -%}
+{%- assign pbc_item_price = pbc_item_pbc.price -%}
+{%- assign pbc_item_price_min = pbc_item_pbc.price_min -%}
+{%- assign pbc_item_price_max = pbc_item_pbc.price_max -%}
+{%- assign pbc_item_compare_at_price = pbc_item_pbc.compare_at_price -%}
+{%- assign pbc_item_compare_at_price_min = pbc_item_pbc.compare_at_price_min -%}
+{%- assign pbc_item_compare_at_price_max = pbc_item_pbc.compare_at_price_max -%}
+{%- assign pbc_item_original_line_price = pbc_item_pbc.original_line_price -%}
+{%- assign pbc_item_final_line_price = pbc_item_pbc.final_line_price -%}
+{%- assign pbc_line_price = pbc_item_pbc.line_price -%}
+{%- assign pbc_var_pbc_price = pbc_var_pbc.price -%}
+
+{% assign customerTag = false %}
+
+{% if shop.metafields.pbc_wholesale['app_enabled'] and customer.tags != blank %}
+    {% for metafield in pbc_prod_pbc.metafields.pbc_wholesale %}
+        {% assign metafieldName = metafield | first %}
+        {% if metafieldName contains 'discount_' %}
+            {% assign discountData = metafield | last | split: '|' %}
+            {% assign customerTag = metafieldName | replace: 'discount_', '' %}
+            {% if customer.tags contains customerTag %}
+              {% break %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if discountData and customerTag and customer.tags contains customerTag %}
+        {% if pbc_var_pbc.compare_at_price == blank or pbc_var_pbc.compare_at_price == 0 or pbc_var_pbc.compare_at_price < pbc_var_pbc.price %}
+            {% assign pbc_var_compare_at_price = pbc_var_pbc.price %}
+        {% else %}
+            {% assign pbc_var_compare_at_price = pbc_var_pbc.compare_at_price %}
+        {% endif %}
+
+        {% assign priceKey = customerTag | prepend: "price_" %}
+        {% if pbc_var_pbc.metafields.pbc_wholesale[priceKey] != blank and pbc_var_pbc.metafields.pbc_wholesale[priceKey] > 0 %}
+            {% assign pbc_var_pbc_price = pbc_var_pbc.metafields.pbc_wholesale[priceKey] %}
+        {% else %}
+            {% assign discountType = discountData[0] %}
+            {% assign discountValue = discountData[1] %}
+
+            {% assign pbc_item_original_price = pbc_var_compare_at_price %}
+            {% assign pbc_item_compare_at_price = pbc_var_compare_at_price %}
+            {% assign pbc_item_original_line_price = pbc_item_original_price | round | times: pbc_item_pbc.quantity %}
+
+            {% if pbc_prod_pbc.compare_at_price_min != 0 %}{% assign pbc_item_compare_at_price_min = pbc_prod_pbc.compare_at_price_min %}{% else %}{% assign pbc_item_compare_at_price_min = pbc_prod_pbc.price_min %}{% endif %}
+            {% if pbc_prod_pbc.compare_at_price_max != 0 %}{% assign pbc_item_compare_at_price_max = pbc_prod_pbc.compare_at_price_max %}{% else %}{% assign pbc_item_compare_at_price_max = pbc_prod_pbc.price_max %}{% endif %}
+
+            {% if discountType == 'percent' %}
+                {% assign discountValue = discountValue | times: 0.01 %}
+                {% assign discountValue = 1 | minus: discountValue %}
+
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | times: discountValue %}
+
+                {% assign pbc_item_final_price = pbc_var_pbc_price %}
+                {% assign pbc_item_price = pbc_var_pbc_price %}
+                {% assign pbc_item_price_min = pbc_prod_pbc.price_min | times: discountValue %}
+                {% assign pbc_item_price_max = pbc_prod_pbc.price_max | times: discountValue %}
+                {% assign pbc_item_final_line_price = pbc_item_final_price | round | times: pbc_item_pbc.quantity %}
+                {% assign pbc_line_price = pbc_item_price | round | times: pbc_item_pbc.quantity %}
+
+            {% else %}
+                {% assign discountValue = discountValue | times: 100 %}
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | minus: discountValue %}
+                {% if pbc_var_pbc_price < 0 %}{% assign pbc_var_pbc_price = 0 %}{% endif %}
+
+                {% assign pbc_item_final_price = pbc_var_pbc_price %}
+                {% assign pbc_item_price = pbc_var_pbc_price %}
+                {% assign pbc_item_price_min = pbc_prod_pbc.price_min | minus: discountValue %}
+                {% if pbc_item_price_min < 0 %}{% assign pbc_item_price_min = 0 %}{% endif %}
+                {% assign pbc_item_price_max = pbc_prod_pbc.price_max | minus: discountValue %}
+                {% if pbc_item_price_max < 0 %}{% assign pbc_item_price_max = 0 %}{% endif %}
+                {% assign pbc_item_final_line_price = pbc_item_final_price | round | times: pbc_item_pbc.quantity %}
+                {% assign pbc_line_price = pbc_item_price | round | times: pbc_item_pbc.quantity %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+
+    {% assign pbc_cart_total_price = pbc_cart_total_price | plus: pbc_line_price %}
+    {% assign pbc_cart_count  = pbc_cart_count | plus: pbc_cart_item.quantity %}
+{% endfor %}
+
+{% if customer %}
+<script type="text/javascript">
+  const checkoutSelectors = [
+    "input[name='checkout']:not(.bold_clone):not(.pbc_ignore)",
+    "button[name='checkout']:not(.pbc_ignore)",
+    "[href$='checkout']:not(.pbc_ignore)",
+    "input[name='goto_pp']",
+    "button[name='goto_pp']",
+    "input[name='goto_gc']",
+    "button[name='goto_gc']",
+    ".google-wallet-button-holder",
+    ".amazon-payments-pay-button",
+    ".shopify-payment-button__button",
+  ];
+
+  document.addEventListener('click', function (event) {
+    for (let selector of checkoutSelectors) {
+      let elements = document.querySelectorAll(selector);
+      let productId = false;
+      let variant = false;
+      if (selector === ".shopify-payment-button__button") {
+        productId = "{{ product.id }}";
+        variant = {{ product.selected_or_first_available_variant | json }};     
+      }
+    
+      for (let element of elements) {
+        if (element.isSameNode(event.target)) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          fetch("/cart.js?t=" + Date.now()).then(cartData => cartData.json()).then(cartData => {
+            fetch("/apps/pbc-wholesale/check-discount", {
+              method: "POST",
+              body: JSON.stringify({
+                cartData,
+                customer: {id: {{customer.id}}, email: "{{customer.email | escape}}" },
+                productId: productId,
+                variant: variant,
+              })
+            }).then(data => data.json()).then(data => {
+              window.location.href = data.data.url;
+            })
+          })
+        }
+      }
+    }
+  }, true);
+
+  let inputElements = document.getElementsByName("updates[]");
+
+  for (let i = 0; i < inputElements.length; i++) {
+    inputElements[i].addEventListener("change", function() {
+      var updateButtons = document.getElementsByName("update");
+      if (updateButtons.length) {
+        updateButtons[0].click();
+      }
+    });
+  }
+</script>
+{% endif %}
+{% comment %}pbc code wholesale{% endcomment %}
+
+
+{{ 'sections.cart.new_subtotal' | t }}: {{ pbc_cart_total_price | money_with_currency }}

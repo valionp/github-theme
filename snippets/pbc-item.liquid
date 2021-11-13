@@ -1,0 +1,79 @@
+{% assign item = line_item | default: item %}
+{% assign pbc_product = item.product | default: item %}
+{% assign pbc_variant = pbc_product.selected_or_first_available_variant %}
+
+{%- assign pbc_item_original_price = item.original_price -%}
+{%- assign pbc_item_final_price = item.final_price -%}
+{%- assign pbc_item_price = item.price -%}
+{%- assign pbc_item_price_min = item.price_min -%}
+{%- assign pbc_item_price_max = item.price_max -%}
+{%- assign pbc_item_compare_at_price = item.compare_at_price -%}
+{%- assign pbc_item_compare_at_price_min = item.compare_at_price_min -%}
+{%- assign pbc_item_compare_at_price_max = item.compare_at_price_max -%}
+{%- assign pbc_item_original_line_price = item.original_line_price -%}
+{%- assign pbc_item_final_line_price = item.final_line_price -%}
+{%- assign pbc_line_price = item.line_price -%}
+{%- assign pbc_variant_price = pbc_variant.price -%}
+
+{% assign customerTag = false %}
+
+{% if shop.metafields.pbc_wholesale['app_enabled'] and customer.tags != blank %}
+    {% for metafield in pbc_product.metafields.pbc_wholesale %}
+        {% assign metafieldName = metafield | first %}
+        {% if metafieldName contains 'discount_' %}
+            {% assign discountData = metafield | last | split: '|' %}
+            {% assign customerTag = metafieldName | replace: 'discount_', '' %}
+            {% break %}
+        {% endif %}
+    {% endfor %}
+
+    {% if discountData and customerTag and customer.tags contains customerTag %}
+        {% if pbc_variant.compare_at_price == blank or pbc_variant.compare_at_price == 0 or pbc_variant.compare_at_price < pbc_variant.price %}
+            {% assign pbc_variant_compare_at_price = pbc_variant.price %}
+        {% else %}
+            {% assign pbc_variant_compare_at_price = pbc_variant.compare_at_price %}
+        {% endif %}
+
+        {% assign priceKey = customerTag | prepend: "price_" %}
+        {% if pbc_variant.metafields.pbc_wholesale[priceKey] != blank and pbc_variant.metafields.pbc_wholesale[priceKey] > 0 %}
+            {% assign pbc_variant_price = pbc_variant.metafields.pbc_wholesale[priceKey] %}
+        {% else %}
+            {% assign discountType = discountData[0] %}
+            {% assign discountValue = discountData[1] %}
+
+            {% assign pbc_item_original_price = pbc_variant_compare_at_price %}
+            {% assign pbc_item_compare_at_price = pbc_variant_compare_at_price %}
+            {% assign pbc_item_original_line_price = pbc_item_original_price | round | times: item.quantity %}
+
+            {% if pbc_product.compare_at_price_min != 0 %}{% assign pbc_item_compare_at_price_min = pbc_product.compare_at_price_min %}{% else %}{% assign pbc_item_compare_at_price_min = pbc_product.price_min %}{% endif %}
+            {% if pbc_product.compare_at_price_max != 0 %}{% assign pbc_item_compare_at_price_max = pbc_product.compare_at_price_max %}{% else %}{% assign pbc_item_compare_at_price_max = pbc_product.price_max %}{% endif %}
+
+            {% if discountType == 'percent' %}
+                {% assign discountValue = discountValue | times: 0.01 %}
+                {% assign discountValue = 1 | minus: discountValue %}
+
+                {% assign pbc_variant_price = pbc_variant_price | times: discountValue %}
+
+                {% assign pbc_item_final_price = pbc_variant_price %}
+                {% assign pbc_item_price = pbc_variant_price %}
+                {% assign pbc_item_price_min = pbc_product.price_min | times: discountValue %}
+                {% assign pbc_item_price_max = pbc_product.price_max | times: discountValue %}
+                {% assign pbc_item_final_line_price = pbc_item_final_price | round | times: item.quantity %}
+                {% assign pbc_line_price = pbc_item_price | round | times: item.quantity %}
+
+            {% else %}
+                {% assign pbc_variant_price = pbc_variant_price | minus: discountValue %}
+                {% if pbc_variant_price < 0 %}{% assign pbc_variant_price = 0 %}{% endif %}
+
+                {% assign pbc_item_final_price = pbc_variant_price %}
+                {% assign pbc_item_price = pbc_variant_price %}
+                {% assign pbc_item_price_min = pbc_product.price_min | minus: discountValue %}
+                {% if pbc_item_price_min < 0 %}{% assign pbc_item_price_min = 0 %}{% endif %}
+                {% assign pbc_item_price_max = pbc_product.price_max | minus: discountValue %}
+                {% if pbc_item_price_max < 0 %}{% assign pbc_item_price_max = 0 %}{% endif %}
+                {% assign pbc_item_final_line_price = pbc_item_final_price | round | times: item.quantity %}
+                {% assign pbc_line_price = pbc_item_price | round | times: item.quantity %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}

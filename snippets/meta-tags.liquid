@@ -1,0 +1,108 @@
+{% comment %}pbc code wholesale{% endcomment %}
+{% assign pbc_prod_pbc = product %}
+{% assign pbc_var_pbc = variant | default: pbc_prod_pbc.selected_or_first_available_variant %}
+
+{%- assign pbc_price = pbc_prod_pbc.price -%}
+{%- assign pbc_price_min = pbc_prod_pbc.price_min -%}
+{%- assign pbc_price_max = pbc_prod_pbc.price_max -%}
+{%- assign pbc_compare_at_price_pbc = pbc_prod_pbc.compare_at_price -%}
+{%- assign pbc_compare_at_price_min = pbc_prod_pbc.compare_at_price_min -%}
+{%- assign pbc_compare_at_price_max = pbc_prod_pbc.compare_at_price_max -%}
+{%- assign pbc_var_pbc_price = pbc_var_pbc.price -%}
+{%- assign pbc_var_pbc_compare_at_price = pbc_var_pbc.compare_at_price -%}
+
+{% assign customerTag = false %}
+
+{% if shop.metafields.pbc_wholesale['app_enabled'] and customer.tags != blank %}
+    {% for metafield in pbc_prod_pbc.metafields.pbc_wholesale %}
+        {% assign metafieldName = metafield | first %}
+        {% if metafieldName contains 'discount_' %}
+            {% assign discountData = metafield | last | split: '|' %}
+            {% assign customerTag = metafieldName | replace: 'discount_', '' %}
+            {% if customer.tags contains customerTag %}
+              {% break %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if discountData and customerTag and customer.tags contains customerTag %}
+        {% if pbc_var_pbc.compare_at_price == blank or pbc_var_pbc.compare_at_price == 0 or pbc_var_pbc.compare_at_price < pbc_var_pbc.price %}
+            {% assign pbc_var_pbc_compare_at_price = pbc_var_pbc.price %}
+        {% else %}
+            {% assign pbc_var_pbc_compare_at_price = pbc_var_pbc.compare_at_price %}
+        {% endif %}
+
+        {% assign priceKey = customerTag | prepend: "price_" %}
+        {% if pbc_var_pbc.metafields.pbc_wholesale[priceKey] != blank and pbc_var_pbc.metafields.pbc_wholesale[priceKey] > 0 %}
+            {% assign pbc_var_pbc_price = pbc_var_pbc.metafields.pbc_wholesale[priceKey] %}
+        {% else %}
+            {% assign discountType = discountData[0] %}
+            {% assign discountValue = discountData[1] %}
+            {% assign pbc_compare_at_price_pbc = pbc_var_pbc_compare_at_price %}
+            {% if pbc_prod_pbc.compare_at_price_min != 0 %}{% assign pbc_compare_at_price_min = pbc_prod_pbc.compare_at_price_min %}{% else %}{% assign pbc_compare_at_price_min = pbc_prod_pbc.price_min %}{% endif %}
+            {% if pbc_prod_pbc.compare_at_price_max != 0 %}{% assign pbc_compare_at_price_max = pbc_prod_pbc.compare_at_price_max %}{% else %}{% assign pbc_compare_at_price_max = pbc_prod_pbc.price_max %}{% endif %}
+
+            {% if discountType == 'percent' %}
+                {% assign discountValue = discountValue | times: 0.01 %}
+                {% assign discountValue = 1 | minus: discountValue %}
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | times: discountValue %}
+                {% assign pbc_price = pbc_var_pbc_price %}
+                {% assign pbc_price_min = pbc_prod_pbc.price_min | times: discountValue %}
+                {% assign pbc_price_max = pbc_prod_pbc.price_max | times: discountValue %}
+            {% else %}
+                {% assign discountValue = discountValue | times: 100 %}
+                {% assign pbc_var_pbc_price = pbc_var_pbc_price | minus: discountValue %}
+                {% if pbc_var_pbc_price < 0 %}{% assign pbc_var_pbc_price = 0 %}{% endif %}
+                {% assign pbc_price = pbc_var_pbc_price %}
+                {% assign pbc_price_min = pbc_prod_pbc.price_min | times: discountValue %}
+                {% if pbc_price_min < 0 %}{% assign pbc_price_min = 0 %}{% endif %}
+                {% assign pbc_price_max = pbc_prod_pbc.price_max | times: discountValue %}
+                {% if pbc_price_max < 0 %}{% assign pbc_price_max = 0 %}{% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+{% comment %}pbc code wholesale{% endcomment %}
+
+
+{%- liquid
+  assign og_title = page_title | default: shop.name
+  assign og_url = canonical_url | default: shop.url
+  assign og_type = 'website'
+  assign og_description = page_description | default: shop.description | default: shop.name
+
+  if request.page_type == 'product'
+    assign og_type = 'product'
+  elsif request.page_type == 'article'
+    assign og_type = 'article'
+  elsif request.page_type == 'collection'
+    assign og_type = 'product.group'
+  elsif request.page_type == 'password'
+    assign og_url = shop.url
+  endif
+%}
+
+<meta property="og:site_name" content="{{ shop.name }}">
+<meta property="og:url" content="{{ og_url }}">
+<meta property="og:title" content="{{ og_title | escape }}">
+<meta property="og:type" content="{{ og_type }}">
+<meta property="og:description" content="{{ og_description | escape }}">
+
+{%- if page_image -%}
+  <meta property="og:image" content="http:{{ page_image | img_url: 'master' }}">
+  <meta property="og:image:secure_url" content="https:{{ page_image | img_url: 'master' }}">
+  <meta property="og:image:width" content="{{ page_image.width }}">
+  <meta property="og:image:height" content="{{ page_image.height }}">
+{%- endif -%}
+
+{%- if request.page_type == 'product' -%}
+  <meta property="og:price:amount" content="{{ pbc_price | money_without_currency | strip_html }}">
+  <meta property="og:price:currency" content="{{ cart.currency.iso_code }}">
+{%- endif -%}
+
+{%- if settings.social_twitter_link != blank -%}
+  <meta name="twitter:site" content="{{ settings.social_twitter_link | split: 'twitter.com/' | last | prepend: '@' }}">
+{%- endif -%}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ og_title | escape }}">
+<meta name="twitter:description" content="{{ og_description | escape }}">
