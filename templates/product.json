@@ -55,7 +55,7 @@
             "share_label": "Share"
           }
         },
-        "06c6f9d2-9d52-42c3-9ed9-1f2c9e301ea2": {
+        "9673fc33-42c7-41d3-a641-a3879fa932cf": {
           "type": "shopify:\/\/apps\/petrotabsdev\/blocks\/tabs\/6d2a2a66-3f96-4f34-9d3b-4b7692333844",
           "settings": {
           }
@@ -71,7 +71,7 @@
         "buy_buttons",
         "description",
         "share",
-        "06c6f9d2-9d52-42c3-9ed9-1f2c9e301ea2"
+        "9673fc33-42c7-41d3-a641-a3879fa932cf"
       ],
       "settings": {
         "enable_sticky_info": true,
