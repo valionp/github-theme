@@ -30,6 +30,7 @@
         "variant_picker": {
           "type": "variant_picker",
           "settings": {
+            "picker_type": "button"
           }
         },
         "quantity_selector": {
@@ -40,6 +41,7 @@
         "buy_buttons": {
           "type": "buy_buttons",
           "settings": {
+            "show_dynamic_checkout": true
           }
         },
         "description": {
@@ -49,6 +51,12 @@
         },
         "share": {
           "type": "share",
+          "settings": {
+            "share_label": "Share"
+          }
+        },
+        "06c6f9d2-9d52-42c3-9ed9-1f2c9e301ea2": {
+          "type": "shopify:\/\/apps\/petrotabsdev\/blocks\/tabs\/6d2a2a66-3f96-4f34-9d3b-4b7692333844",
           "settings": {
           }
         }
@@ -62,14 +70,25 @@
         "quantity_selector",
         "buy_buttons",
         "description",
-        "share"
+        "share",
+        "06c6f9d2-9d52-42c3-9ed9-1f2c9e301ea2"
       ],
       "settings": {
+        "enable_sticky_info": true,
+        "hide_variants": false,
+        "enable_video_looping": false
       }
     },
     "product-recommendations": {
       "type": "product-recommendations",
       "settings": {
+        "heading": "You may also like",
+        "image_ratio": "adapt",
+        "show_secondary_image": false,
+        "add_image_padding": false,
+        "show_image_outline": true,
+        "show_vendor": false,
+        "show_rating": false
       }
     }
   },
