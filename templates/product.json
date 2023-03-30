@@ -44,6 +44,11 @@
             "show_dynamic_checkout": true
           }
         },
+        "664af91a-fd6a-45e0-b6a4-d5f125b91856": {
+          "type": "shopify:\/\/apps\/petrotabsdev\/blocks\/tabs\/6d2a2a66-3f96-4f34-9d3b-4b7692333844",
+          "settings": {
+          }
+        },
         "description": {
           "type": "description",
           "settings": {
@@ -53,12 +58,6 @@
           "type": "share",
           "settings": {
             "share_label": "Share"
-          }
-        },
-        "664af91a-fd6a-45e0-b6a4-d5f125b91856": {
-          "type": "shopify:\/\/apps\/petrotabsdev\/blocks\/tabs\/6d2a2a66-3f96-4f34-9d3b-4b7692333844",
-          "disabled": true,
-          "settings": {
           }
         }
       },
@@ -70,9 +69,9 @@
         "variant_picker",
         "quantity_selector",
         "buy_buttons",
+        "664af91a-fd6a-45e0-b6a4-d5f125b91856",
         "description",
-        "share",
-        "664af91a-fd6a-45e0-b6a4-d5f125b91856"
+        "share"
       ],
       "settings": {
         "enable_sticky_info": true,
