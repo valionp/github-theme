@@ -57,6 +57,7 @@
         },
         "664af91a-fd6a-45e0-b6a4-d5f125b91856": {
           "type": "shopify:\/\/apps\/petrotabsdev\/blocks\/tabs\/6d2a2a66-3f96-4f34-9d3b-4b7692333844",
+          "disabled": true,
           "settings": {
           }
         }
@@ -79,8 +80,25 @@
         "enable_video_looping": false
       }
     },
+    "16801775461fa5b268": {
+      "type": "apps",
+      "blocks": {
+        "1f25d3a6-9a96-4231-9d97-b0eb0130c9d9": {
+          "type": "shopify:\/\/apps\/producttabs-staging\/blocks\/tabs\/f2be24de-d1c0-4e5c-8cb1-f7b4dbe92b5e",
+          "settings": {
+          }
+        }
+      },
+      "block_order": [
+        "1f25d3a6-9a96-4231-9d97-b0eb0130c9d9"
+      ],
+      "settings": {
+        "include_margins": true
+      }
+    },
     "product-recommendations": {
       "type": "product-recommendations",
+      "disabled": true,
       "settings": {
         "heading": "You may also like",
         "image_ratio": "adapt",
@@ -90,27 +108,11 @@
         "show_vendor": false,
         "show_rating": false
       }
-    },
-    "1680177381c1ebd8f2": {
-      "type": "apps",
-      "blocks": {
-        "ac9928f3-32b6-4bde-99f8-bbd98667d441": {
-          "type": "shopify:\/\/apps\/producttabs-staging\/blocks\/tabs\/f2be24de-d1c0-4e5c-8cb1-f7b4dbe92b5e",
-          "settings": {
-          }
-        }
-      },
-      "block_order": [
-        "ac9928f3-32b6-4bde-99f8-bbd98667d441"
-      ],
-      "settings": {
-        "include_margins": true
-      }
     }
   },
   "order": [
     "main",
-    "product-recommendations",
-    "1680177381c1ebd8f2"
+    "16801775461fa5b268",
+    "product-recommendations"
   ]
 }
